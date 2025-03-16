@@ -1,20 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 const Stopwatch = () => {
-  const [timeInSeconds, setTimeInSeconds] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0); 
   const [isRunning, setIsRunning] = useState(false);
+  const startTimeRef = useRef(null); 
+  const timerRef = useRef(null); 
 
   useEffect(() => {
-    let interval;
     if (isRunning) {
-      interval = setInterval(() => {
-        setTimeInSeconds((prevTime) => prevTime + 1);
+      startTimeRef.current = Date.now() - elapsedTime * 1000; 
+      timerRef.current = setInterval(() => {
+        const now = Date.now();
+        const diffInSeconds = Math.floor((now - startTimeRef.current) / 1000);
+        setElapsedTime(diffInSeconds);
       }, 1000);
     } else {
-      clearInterval(interval);
+      clearInterval(timerRef.current);
     }
-    return () => clearInterval(interval);
+
+    return () => clearInterval(timerRef.current);
   }, [isRunning]);
 
   const handleStartStop = () => {
@@ -23,21 +28,19 @@ const Stopwatch = () => {
 
   const handleReset = () => {
     setIsRunning(false);
-    setTimeInSeconds(0);
+    setElapsedTime(0);
   };
 
   const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
-    const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
-    return `${formattedMinutes}:${formattedSeconds}`;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
   return (
     <div className="stopwatch-container">
       <h1 className="stopwatch-title">Stopwatch</h1>
-      <p className="stopwatch-time">Time: {formatTime(timeInSeconds)}</p>
+      <p className="stopwatch-time">Time: {formatTime(elapsedTime)}</p>
       <div className="stopwatch-buttons">
         <button className="start-stop-button" onClick={handleStartStop}>
           {isRunning ? 'Stop' : 'Start'}
